@@ -26,17 +26,17 @@ class Rajaongkir
     }
     
     
-    public function getFunction ($subendpoint, $form_params = [])
+    public function getFunction ($method, $subendpoint, $form_params = [])
     {
         try {
             
             $client = new Client();
-            $response = $client->request('GET', $this->url.$subendpoint, [
+            $response = $client->request($method, $this->url.$subendpoint, [
                 'headers' => [
                     'key' => $this->API_KEY_ONGKIR,
                     'content-type' => 'application/x-www-form-urlencoded',  
-                ],
-                $form_params,
+                ], 
+                'form_params' => $form_params
             ]);
             $result = json_decode($response->getBody()->getContents(), true);
             return $result;
@@ -49,12 +49,13 @@ class Rajaongkir
             ];
         }
     }
-    
+
+ 
     
     public function getProvince($id)
     {
         $subendpoint = '/province?id='.$id;
-        $result = $this->getFunction($subendpoint);
+        $result = $this->getFunction('GET', $subendpoint);
         return $result;
     }
     
@@ -65,14 +66,14 @@ class Rajaongkir
         $form_params = [
             'province' => $province_id
         ];
-        $result = $this->getFunction($subendpoint, $form_params);
+        $result = $this->getFunction('GET', $subendpoint, $form_params);
         return $result;
     }
     
     public function subdistricts($city_id)
     {
         $subendpoint = '/subdistrict?city='.$city_id;
-        $result = $this->getFunction($subendpoint); 
+        $result = $this->getFunction('GET', $subendpoint); 
         return $result;
     }
     
@@ -87,19 +88,19 @@ class Rajaongkir
             'weight' => $weight,
             'courier' => $courier
         ];
-        $result = $this->getFunction($subendpoint, $form_params);
+        $result = $this->getFunction('POST', $subendpoint, $form_params);
         return $result;
     }
     
     public function InterntionalOrigin($id, $province){ 
         $subendpoint = '/v2/internationalOrigin?id='.$id.'&province='.$province;
-        $result = $this->getFunction($subendpoint);
+        $result = $this->getFunction('GET', $subendpoint);
         return $result;
     }
     
     public function InterntionalDestination($id, $province){ 
         $subendpoint = '/v2/internationalDestination?id='.$id;
-        $result = $this->getFunction($subendpoint);
+        $result = $this->getFunction('GET', $subendpoint);
         return $result;
     }
     
@@ -112,14 +113,14 @@ class Rajaongkir
             'weight' => $weight,
             'courier' => $courier
         ];
-        $result = $this->getFunction($subendpoint, $form_params);
+        $result = $this->getFunction('POST', $subendpoint, $form_params);
         return $result;
     }
     
     public function getDollarCurrency()
     {
         $subendpoint = '/currency';
-        $result = $this->getFunction($subendpoint);
+        $result = $this->getFunction('GET', $subendpoint);
         return $result;
     }
     
@@ -129,7 +130,7 @@ class Rajaongkir
             'waybill' => $waybill,
             'courier' => $courier
         ];
-        $result = $this->getFunction($subendpoint);
+        $result = $this->getFunction('POST', $subendpoint, $form_params);
         return $result;
     }
     
