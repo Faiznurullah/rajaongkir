@@ -1,0 +1,22 @@
+{
+    "name": "faiznurullah/rajaongkir",
+    "description": "package for php application for connect with rajaongkir service",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Faiznurullah\\Rajaongkir\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Faiz Nurullah"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "guzzlehttp/guzzle": "^7.0",
+        "illuminate/support": "^10.48",
+        "vlucas/phpdotenv": "^5.6"
+    }
+}
