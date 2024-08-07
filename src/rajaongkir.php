@@ -40,7 +40,7 @@ class Rajaongkir
             ]);
             $result = json_decode($response->getBody()->getContents(), true);
             return $result;
-
+            
         } catch (\Throwable $th) {
             $response = [
                 'code' => $th->getCode(),
@@ -49,8 +49,8 @@ class Rajaongkir
             ];
         }
     }
-
- 
+    
+    
     
     public function getProvince($id)
     {
@@ -79,13 +79,15 @@ class Rajaongkir
     
     
     
-    public function getCost($origin, $destination, $weight, $courier)
+    public function getCost($origin, $originType, $destination, $destinationType, $weight, $courier)
     {
         $subendpoint = '/cost';
         $form_params = [
             'origin' => $origin,
+            'originType' => $originType,
             'destination' => $destination,
-            'weight' => $weight,
+            'destinationType' => $destinationType,
+            'weight' => $weight, 
             'courier' => $courier
         ];
         $result = $this->getFunction('POST', $subendpoint, $form_params);
@@ -98,7 +100,7 @@ class Rajaongkir
         return $result;
     }
     
-    public function InterntionalDestination($id, $province){ 
+    public function InterntionalDestination($id){ 
         $subendpoint = '/v2/internationalDestination?id='.$id;
         $result = $this->getFunction('GET', $subendpoint);
         return $result;
