@@ -16,7 +16,7 @@
     "minimum-stability": "stable",
     "require": {
         "guzzlehttp/guzzle": "^7.0",
-        "illuminate/support": "^10.48",
+        "illuminate/support": "^6|^7|^8|^9|^10|^11",
         "vlucas/phpdotenv": "^5.6"
     }
 }
