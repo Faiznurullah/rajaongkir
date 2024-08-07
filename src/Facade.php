@@ -3,7 +3,7 @@
 namespace Faiznurullah\Rajaongkir;
 use illuminate\Support\Facades\Facade;
 
-class Rajaongkir extends Facade
+class RajaongkirFacade extends Facade
 {
     protected static function getFacadeAccessor()
     {
