@@ -3,12 +3,10 @@
 namespace Faiznurullah\Rajaongkir;
 use GuzzleHttp\Client;
 
-class Rajaongkir
+class rajaongkir
 {
     
-    private $API_KEY_ONGKIR;
-    private $STATUS_API_KEY;
-    private $url;
+    private $API_KEY_ONGKIR, $STATUS_API_KEY, $url;
     
     
     public function __construct($API_KEY_ONGKIR, $STATUS_API_KEY)
