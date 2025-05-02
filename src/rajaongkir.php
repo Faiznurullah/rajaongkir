@@ -26,25 +26,19 @@ class rajaongkir
     public function getFunction($method, $subendpoint, $form_params = [])
     {
         try {
-            $client = new Client();
 
-            $options = [
+            $client = new Client();
+            $response = $client->request($method, $this->url . $subendpoint, [
                 'headers' => [
                     'key' => $this->API_KEY_ONGKIR,
                     'content-type' => 'application/x-www-form-urlencoded',
                 ],
-            ];
-
-            // Tambahkan query string jika ada parameter
-            if (!empty($form_params)) {
-                $options['query'] = $form_params;
-            }
-
-            $response = $client->request($method, $this->url . $subendpoint, $options);
+                'form_params' => $form_params
+            ]);
             $result = json_decode($response->getBody()->getContents(), true);
             return $result;
         } catch (\Throwable $th) {
-            return [
+            $response = [
                 'code' => $th->getCode(),
                 'status' => 'error',
                 'message' => 'Error API Raja Ongkir',
@@ -54,44 +48,42 @@ class rajaongkir
 
 
 
-
     public function getProvince($id = null)
     {
-        $subendpoint = '/province';
+        $params = [];
 
         if ($id !== null) {
-            $subendpoint .= '?id=' . $id;
+            $params['id'] = $id;
         }
 
-        return $this->getFunction('GET', $subendpoint);
+        return $this->getFunction('GET', '/province', $params);
     }
 
     public function getCities($city_id = null, $province_id = null)
     {
-        $subendpoint = '/city';
-        $queryParams = [];
+        $params = [];
 
         if ($city_id !== null) {
-            $queryParams[] = 'id=' . $city_id;
+            $params['id'] = $city_id;
         }
 
         if ($province_id !== null) {
-            $queryParams[] = 'province=' . $province_id;
+            $params['province'] = $province_id;
         }
 
-        if (!empty($queryParams)) {
-            $subendpoint .= '?' . implode('&', $queryParams);
-        }
-
-        return $this->getFunction('GET', $subendpoint);
+        return $this->getFunction('GET', '/city', $params);
     }
 
 
-    public function subdistricts($city_id)
+    public function subdistricts($city_id = null)
     {
-        $subendpoint = '/subdistrict?city=' . $city_id;
-        $result = $this->getFunction('GET', $subendpoint);
-        return $result;
+        $params = [];
+
+        if ($city_id !== null) {
+            $params['city'] = $city_id;
+        }
+
+        return $this->getFunction('GET', '/subdistrict', $params);
     }
 
 
