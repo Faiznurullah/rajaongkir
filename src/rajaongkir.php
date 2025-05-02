@@ -26,25 +26,32 @@ class rajaongkir
     public function getFunction($method, $subendpoint, $form_params = [])
     {
         try {
-
             $client = new Client();
-            $response = $client->request($method, $this->url . $subendpoint, [
+
+            $options = [
                 'headers' => [
                     'key' => $this->API_KEY_ONGKIR,
                     'content-type' => 'application/x-www-form-urlencoded',
                 ],
-                'form_params' => $form_params
-            ]);
+            ];
+
+            // Tambahkan query string jika ada parameter
+            if (!empty($form_params)) {
+                $options['query'] = $form_params;
+            }
+
+            $response = $client->request($method, $this->url . $subendpoint, $options);
             $result = json_decode($response->getBody()->getContents(), true);
             return $result;
         } catch (\Throwable $th) {
-            $response = [
+            return [
                 'code' => $th->getCode(),
                 'status' => 'error',
                 'message' => 'Error API Raja Ongkir',
             ];
         }
     }
+
 
 
 
