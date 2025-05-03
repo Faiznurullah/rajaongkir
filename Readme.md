@@ -19,12 +19,6 @@ on file .env you can add this configuration:
 API_KEY_ONGKIR = "API_KEY_ONGKIR";
 STATUS_API_KEY = "Pro or Starter";
 ```
-on file ```config/app.php```  you can add this configuration.
-```
-'providers' => [ 
-    Faiznurullah\Rajaongkir\RajaongkirServiceProvider::class,
-],
-```
 ### Native
 Initialize some required credentials. You can get credentials on your raja ongkir account dashboard.
 ```
