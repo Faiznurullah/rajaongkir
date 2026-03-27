@@ -16,19 +16,14 @@ use InvalidArgumentException;
  */
 class RajaOngkir
 {
+
+
     /**
      * RajaOngkir API Key
      * 
      * @var string
      */
     private $apiKey;
-
-    /**
-     * RajaOngkir account type (Starter, Basic, Pro)
-     * 
-     * @var string
-     */
-    private $accountType;
 
     /**
      * Base API URL
@@ -44,25 +39,21 @@ class RajaOngkir
      */
     private $client;
 
-    /**
-     * Account type constants
-     */
-    const ACCOUNT_STARTER = 'starter';
-    const ACCOUNT_BASIC = 'basic';
-    const ACCOUNT_PRO = 'pro';
 
     /**
      * API Endpoints
      */
-    const ENDPOINT_PROVINCE = '/province';
-    const ENDPOINT_CITY = '/city';
-    const ENDPOINT_SUBDISTRICT = '/subdistrict';
-    const ENDPOINT_COST = '/cost';
-    const ENDPOINT_INTERNATIONAL_ORIGIN = '/v2/internationalOrigin';
-    const ENDPOINT_INTERNATIONAL_DESTINATION = '/v2/internationalDestination';
-    const ENDPOINT_INTERNATIONAL_COST = '/v2/internationalCost';
-    const ENDPOINT_CURRENCY = '/currency';
-    const ENDPOINT_WAYBILL = '/waybill';
+    const ENDPOINT_PROVINCE = '/destination/province';
+    const ENDPOINT_CITY = '/destination/city';
+    const ENDPOINT_DISTRICT = '/destination/district';
+    const ENDPOINT_SUBDISTRICT = '/destination/sub-district';
+
+    const ENDPOINT_CALCULATE_DISTRICT_COST = '/calculate/district/domestic-cost';
+
+    const ENDPOINT_TRACKING_AWB = '/track/waybill';
+
+    const ENDPOINT_SEARCH_DOMESTIC_DESTINATION = '/destination/domestic-destination';
+
 
     /**
      * RajaOngkir constructor
@@ -71,14 +62,13 @@ class RajaOngkir
      * @param string $accountType RajaOngkir account type (starter, basic, pro)
      * @throws InvalidArgumentException If account type is invalid
      */
-    public function __construct(string $apiKey, string $accountType = self::ACCOUNT_STARTER)
+    public function __construct(string $apiKey)
     {
         if (empty($apiKey)) {
             throw new InvalidArgumentException('API Key is required');
         }
 
         $this->apiKey = $apiKey;
-        $this->accountType = strtolower($accountType);
         $this->setBaseUrl();
         $this->client = new Client();
     }
@@ -91,21 +81,8 @@ class RajaOngkir
      */
     private function setBaseUrl(): void
     {
-        switch ($this->accountType) {
-            case self::ACCOUNT_STARTER:
-                $this->baseUrl = 'https://api.rajaongkir.com/starter';
-                break;
-            case self::ACCOUNT_BASIC:
-                $this->baseUrl = 'https://api.rajaongkir.com/basic';
-                break;
-            case self::ACCOUNT_PRO:
-                $this->baseUrl = 'https://pro.rajaongkir.com/api';
-                break;
-            default:
-                throw new InvalidArgumentException(
-                    "Invalid account type: {$this->accountType}. Valid options are: starter, basic, pro"
-                );
-        }
+
+        $this->baseUrl = 'https://rajaongkir.komerce.id/api/v1';
     }
 
     /**
@@ -157,225 +134,107 @@ class RajaOngkir
 
     /**
      * Get province data
-     * 
-     * @param int|null $id Province ID
+     *  
      * @return array
      */
-    public function getProvince(?int $id = null): array
+    public function getProvinces(): array
     {
-        $params = [];
-        if ($id !== null) {
-            $params['id'] = $id;
-        }
-        return $this->request('GET', self::ENDPOINT_PROVINCE, $params);
+        return $this->request('GET', self::ENDPOINT_PROVINCE);
     }
 
     /**
      * Get city data
      * 
-     * @param int|null $cityId City ID
-     * @param int|null $provinceId Province ID
+     * @param int $provinceId Province ID
      * @return array
      */
-    public function getCities(?int $cityId = null, ?int $provinceId = null): array
+    public function getCities(int $provinceId): array
     {
-        $params = [];
-        if ($cityId !== null) {
-            $params['id'] = $cityId;
-        }
-        if ($provinceId !== null) {
-            $params['province'] = $provinceId;
-        }
-        return $this->request('GET', self::ENDPOINT_CITY, $params);
+        $url = self::ENDPOINT_CITY . "/" . $provinceId;
+        return $this->request('GET', $url);
     }
 
     /**
-     * Get subdistrict data (Pro account only)
-     * 
+     * Get district data
      * @param int $cityId City ID
      * @return array
      */
-    public function getSubdistricts(int $cityId): array
+    public function getDistrict(int $cityId): array
     {
-        if ($this->accountType !== self::ACCOUNT_PRO) {
-            return [
-                'rajaongkir' => [
-                    'status' => [
-                        'code' => 400,
-                        'description' => 'This feature is only available for Pro accounts'
-                    ]
-                ]
-            ];
-        }
-
-        return $this->request('GET', self::ENDPOINT_SUBDISTRICT, ['city' => $cityId]);
+        $url = self::ENDPOINT_DISTRICT . "/" . $cityId;
+        return $this->request('GET', $url);
     }
 
     /**
-     * Calculate shipping cost
-     * 
-     * @param int|string $origin Origin city/subdistrict ID
-     * @param string $originType Origin type (city, subdistrict)
-     * @param int|string $destination Destination city/subdistrict ID
-     * @param string $destinationType Destination type (city, subdistrict)
-     * @param int $weight Weight in grams
-     * @param string $courier Courier code (jne, tiki, pos, etc)
+     * Get subdistrict data
+     * @param int $districtId District ID
      * @return array
      */
-    public function getCost($origin, string $originType, $destination, string $destinationType, int $weight, string $courier): array
+
+    public function getSubdistrict(int $districtId): array
+    {
+        $url = self::ENDPOINT_SUBDISTRICT . "/" . $districtId;
+        return $this->request('GET', $url);
+    }
+
+    /**
+     * Calculate shipping cost based on district
+     * @param int $originDistrictId Origin district ID
+     * @param int $destinationDistrictId Destination district ID
+     * @param int $weight Weight in grams
+     * @param string $courier Courier code (jne, pos, tiki)
+     * @return array
+     */
+
+    public function calculateDistrictCost(int $originDistrictId, int $destinationDistrictId, int $weight, string $courier): array
     {
         $params = [
-            'origin' => $origin,
-            'destination' => $destination,
+            'origin' => $originDistrictId,
+            'destination' => $destinationDistrictId,
             'weight' => $weight,
-            'courier' => $courier
+            'courier' => $courier,
+            'price' => 'lowest'
         ];
 
-        // Add originType and destinationType parameters for Pro accounts
-        if ($this->accountType === self::ACCOUNT_PRO) {
-            $params['originType'] = $originType;
-            $params['destinationType'] = $destinationType;
-        }
-
-        return $this->request('POST', self::ENDPOINT_COST, $params);
+        return $this->request('POST', self::ENDPOINT_CALCULATE_DISTRICT_COST, $params);
     }
 
     /**
-     * Get international origin data
-     * 
-     * @param int|null $id City ID
-     * @param int|null $provinceId Province ID
-     * @return array
-     */
-    public function getInternationalOrigin(?int $id = null, ?int $provinceId = null): array
-    {
-        if ($this->accountType !== self::ACCOUNT_PRO) {
-            return [
-                'rajaongkir' => [
-                    'status' => [
-                        'code' => 400,
-                        'description' => 'This feature is only available for Pro accounts'
-                    ]
-                ]
-            ];
-        }
-
-        $params = [];
-        if ($id !== null) {
-            $params['id'] = $id;
-        }
-        if ($provinceId !== null) {
-            $params['province'] = $provinceId;
-        }
-
-        return $this->request('GET', self::ENDPOINT_INTERNATIONAL_ORIGIN, $params);
-    }
-
-    /**
-     * Get international destination data
-     * 
-     * @param int|null $id Country ID
-     * @return array
-     */
-    public function getInternationalDestination(?int $id = null): array
-    {
-        if ($this->accountType !== self::ACCOUNT_PRO) {
-            return [
-                'rajaongkir' => [
-                    'status' => [
-                        'code' => 400,
-                        'description' => 'This feature is only available for Pro accounts'
-                    ]
-                ]
-            ];
-        }
-
-        $params = [];
-        if ($id !== null) {
-            $params['id'] = $id;
-        }
-
-        return $this->request('GET', self::ENDPOINT_INTERNATIONAL_DESTINATION, $params);
-    }
-
-    /**
-     * Calculate international shipping cost
-     * 
-     * @param int $origin Origin city ID
-     * @param int $destination Destination country ID
-     * @param int $weight Weight in grams
-     * @param string $courier Courier code
-     * @return array
-     */
-    public function getInternationalCost(int $origin, int $destination, int $weight, string $courier): array
-    {
-        if ($this->accountType !== self::ACCOUNT_PRO) {
-            return [
-                'rajaongkir' => [
-                    'status' => [
-                        'code' => 400,
-                        'description' => 'This feature is only available for Pro accounts'
-                    ]
-                ]
-            ];
-        }
-
-        $params = [
-            'origin' => $origin,
-            'destination' => $destination,
-            'weight' => $weight,
-            'courier' => $courier
-        ];
-
-        return $this->request('POST', self::ENDPOINT_INTERNATIONAL_COST, $params);
-    }
-
-    /**
-     * Get currency exchange rate (USD to IDR)
-     * 
-     * @return array
-     */
-    public function getCurrency(): array
-    {
-        if ($this->accountType !== self::ACCOUNT_PRO) {
-            return [
-                'rajaongkir' => [
-                    'status' => [
-                        'code' => 400,
-                        'description' => 'This feature is only available for Pro accounts'
-                    ]
-                ]
-            ];
-        }
-
-        return $this->request('GET', self::ENDPOINT_CURRENCY);
-    }
-
-    /**
-     * Track shipment by waybill number
-     * 
+     * Track a waybill
      * @param string $waybill Waybill number
-     * @param string $courier Courier code
+     * @param string $courier Courier code (jne, pos, tiki)
      * @return array
      */
     public function trackWaybill(string $waybill, string $courier): array
     {
-        if ($this->accountType === self::ACCOUNT_STARTER) {
-            return [
-                'rajaongkir' => [
-                    'status' => [
-                        'code' => 400,
-                        'description' => 'This feature is not available for Starter accounts'
-                    ]
-                ]
-            ];
-        }
-
         $params = [
-            'waybill' => $waybill,
+            'awb' => $waybill,
             'courier' => $courier
         ];
 
-        return $this->request('POST', self::ENDPOINT_WAYBILL, $params);
+        return $this->request('POST', self::ENDPOINT_TRACKING_AWB, $params);
+    }
+
+    /**
+     * Search for domestic destination
+     * @param string $query Search query (city name or district name)
+     * @return array
+     */
+    public function searchDomesticDestination(string $query, ?int $limit = null, ?int $offset = null): array
+    {
+        $params = [
+            'search' => $query,
+
+        ];
+
+        if ($limit !== null) {
+            $params['limit'] = $limit;
+        }
+
+        if ($offset !== null) {
+            $params['offset'] = $offset;
+        }
+
+        return $this->request('GET', self::ENDPOINT_SEARCH_DOMESTIC_DESTINATION, $params);
     }
 }
